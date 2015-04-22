@@ -1,0 +1,185 @@
+<?xml version="1.0"?>
+<!DOCTYPE project>
+<project name="appserver-io-dist/package-tests-system" basedir=".." default="run-system-tests">
+
+    <!-- ==================================================================== -->
+    <!-- Runs all available system tests locally                              -->
+    <!-- ==================================================================== -->
+    <target name="local-run-system-tests">
+        <!-- test runtime installation -->
+        <antcall target="test-install-runtime" />
+        <!-- test dist installation -->
+        <antcall target="test-install-dist" />
+        <!-- test if the services are running -->
+        <antcall target="test-services-running" />
+        <!-- test if there have been errors during startup -->
+        <antcall target="test-errors-log-exists" />
+        <!-- test if the services are reachable -->
+        <antcall target="test-services-reachable" />
+        <!-- test if we can stop the services -->
+        <antcall target="test-services-stop" />
+        <!-- test if we can start the services -->
+        <antcall target="test-services-start" />
+        <!-- test if bundled apps were deployed correctly -->
+        <antcall target="test-bundled-apps-deployed" />
+        <!-- test if the "configtest" command works -->
+        <antcall target="test-configtest-command" />
+        <!-- test if the bundled binaries and executables are present and usable -->
+        <antcall target="test-executable-exist" />
+        <!-- test if the jmeter testplan runs through without errors -->
+        <antcall target="test-jmeter-example-testplan" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Runs all available system tests within a vagrant box we start and    -->
+    <!-- destroy automatically                                                -->
+    <!-- ==================================================================== -->
+    <target name="run-system-tests">
+        <!-- start our vagrant box -->
+        <antcall target="start-vagrant-test-box" />
+        <!-- invoke original system tests within vagrant box -->
+        <antcall target="vagrant-run-system-tests" />
+        <!-- destroy the box after all work is done -->
+        <antcall target="destroy-vagrant-box" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the runtime package can be installed correctly              -->
+    <!-- ==================================================================== -->
+    <target name="test-install-runtime">
+        <!-- try to install the appserver runtime -->
+        <antcall target="install-appserver-runtime" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the dist package can be installed correctly                 -->
+    <!-- ==================================================================== -->
+    <target name="test-install-dist" depends="prepare-src-version-parts">
+        <!-- try to install the appserver dist package -->
+        <antcall target="install-appserver-dist" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the bundled apps have been deployed correctly               -->
+    <!-- ==================================================================== -->
+    <target name="test-bundled-apps-deployed">
+        <!-- test if the example app exists in the webapps directory -->
+        <echo message="Test if app 'example' has been deployed and flagged correctly." />
+        <available file="${appserver-base.dir}/webapps/example/WEB-INF/web.xml" property="example_app.present"/>
+        <fail unless="example_app.present" message="Example app seems to not have been deployed correctly."/>
+        <!-- also test for the deploy flags -->
+        <available file="${appserver-base.dir}/deploy/example.phar.deployed" property="example_deploy_flag.present"/>
+        <fail unless="example_deploy_flag.present" message="Example app deployed but incorrect deploy flag."/>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the services can be reached over network                    -->
+    <!-- ==================================================================== -->
+    <target name="test-services-reachable">
+        <echo message="Trying to connect to the HTTP server." />
+        <waitfor maxwait="20" maxwaitunit="second" timeoutproperty="service.http.unreachable">
+            <socket server="${service.base.address}" port="${service.http.default.port}"/>
+        </waitfor>
+        <fail if="service.http.unreachable" message="The HTTP server could not be reached."/>
+
+        <echo message="Trying to connect to the HTTPS server." />
+        <waitfor maxwait="20" maxwaitunit="second" timeoutproperty="service.https.unreachable">
+            <socket server="${service.base.address}" port="${service.https.default.port}"/>
+        </waitfor>
+        <fail if="service.https.unreachable" message="The HTTPS server could not be reached."/>
+
+        <echo message="Trying to connect to the PHP-FPM service." />
+        <waitfor maxwait="20" maxwaitunit="second" timeoutproperty="service.php-fpm.unreachable">
+            <socket server="${service.base.address}" port="${service.php-fpm.default.port}"/>
+        </waitfor>
+        <fail if="service.php-fpm.unreachable" message="The PHP-FPM service could not be reached."/>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the PHP errors log has been created (it should not)         -->
+    <!-- ==================================================================== -->
+    <target name="test-errors-log-exists">
+        <!-- test if a php_errors.log file has been created -->
+        <echo message="Test for existence of 'php_errors.log' log file." />
+        <available file="${appserver-base.dir}/var/log/php_errors.log" property="php_errors.log.present"/>
+        <!-- trigger a reaction according to the status of the log file -->
+        <antcall target="react-on-errors-log-exists" />
+    </target>
+    
+
+    <!-- ==================================================================== -->
+    <!-- Triggers the reaction to an existing error log                       -->
+    <!-- ==================================================================== -->
+    <target name="react-on-errors-log-exists" if="php_errors.log.present">
+        <!-- print the content of the log file and fail -->
+        <loadfile property="php_errors.log.content" srcFile="${appserver-base.dir}/var/log/php_errors.log" failonerror="false"/>
+        <fail if="php_errors.log.present" message="php_errors.log file has been created. Content is as follows: ${php_errors.log.content}"/>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the packaged executables exist                              -->
+    <!-- ==================================================================== -->
+    <target name="test-executable-exist">
+        <!-- test if a composer binary and ecexutable is present -->
+        <echo message="Test if a composer binary and ecexutable are present and executable." />
+        <available file="${appserver-base.dir}/bin/composer.phar" property="composer-binary.present"/>
+        <fail unless="composer-binary.present" message="The composer binary could not be found."/>
+        <available file="${appserver-base.dir}/bin/composer" property="composer-exec.present"/>
+        <fail unless="composer-exec.present" message="The composer executable could not be found."/>
+        <exec executable="${appserver-base.dir}/bin/composer" failonerror="true">
+            <arg value="-V"/>
+        </exec>
+        <!-- test if a PHP binary and ecexutable is present -->
+        <echo message="Test if a PHP binary is present and executable." />
+        <available file="${appserver-base.dir}/bin/php" property="php-binary.present"/>
+        <fail unless="php-binary.present" message="The PHP binary could not be found."/>
+        <exec executable="${appserver-base.dir}/bin/php" failonerror="true">
+            <arg value="--version"/>
+        </exec>
+        <!-- test if a PHAR binary and ecexutable is present -->
+        <echo message="Test if a PHAR binary and ecexutable are present and executable." />
+        <available file="${appserver-base.dir}/bin/phar.phar" property="phar-binary.present"/>
+        <fail unless="phar-binary.present" message="The PHAR binary could not be found."/>
+        <available file="${appserver-base.dir}/bin/phar" property="phar-exec.present"/>
+        <fail unless="phar-exec.present" message="The PHAR executable could not be found."/>
+        <exec executable="${appserver-base.dir}/bin/phar" failonerror="true">
+            <arg value="version"/>
+        </exec>
+    </target>
+    
+    <!-- ==================================================================== -->
+    <!-- Tests if the jmeter testplan configured against the example app      -->
+    <!-- does run without any errors                                          -->
+    <!-- ==================================================================== -->
+    <target name="test-jmeter-example-testplan">
+        <!-- test if the testplan runs through -->
+        <exec executable="${jmeter.vagrant.basedir}/${jmeter.package.name}/bin/jmeter" failonerror="true" outputproperty="jmeter.example-test.output">
+            <arg line="-n -t ${jmeter.example-test.path}/example-testplan.jmx -l ${vagrant-reports.dir}/system-example-testplan.jtl -Jon_error=stoptestnow -Jloop_count=${jmeter.example.loop-count}"/>
+        </exec>
+        <echo message="${jmeter.example-test.output}" />
+        <!-- parse the produced output and fail if it isn't what we expect -->
+        <parse-jmeter-output output="${jmeter.example-test.output}"/>
+        <fail if="JMETER_HAS_ERRORS" message="Jmeter tests exited with errors. See also log at ${vagrant-reports.dir}" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will look for a positive percentage expressing within jmeter output. -->
+    <!-- Will set JMETER_HAS_ERRORS if there is at least on, JMETER_NO_ERRORS -->
+    <!-- otherwise                                                            -->
+    <!-- ==================================================================== -->
+    <scriptdef name="parse-jmeter-output" language="javascript">
+        <attribute name="output"/>
+        <![CDATA[
+            // getting the params
+            var output = attributes.get("output");
+            // check if there is an error percentage higher than 0.00%
+            var regexp = new RegExp('\([1-9][0-9].[0-9]+%\)|\([1-9]+.[0-9]+%\)|\([0-9]+.[1-9][0-9]%\)|\([0-9]+.[0-9][1-9]%\)', 'm');
+            if (output.search(regexp) > -1) {
+                project.setProperty("JMETER_HAS_ERRORS", true);
+            } else {
+                project.setProperty("JMETER_NO_ERRORS", true);
+            }
+        ]]>
+    </scriptdef>
+
+</project>

@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<!DOCTYPE project>
+<project name="appserver-io-dist/package-tests" basedir=".." default="prepare-test-environment">
+
+    <!-- Read in tests property files -->
+    <property file="${basedir}/tests/tests.properties"/>
+    <property file="${basedir}/tests/tests.default.properties"/>
+
+    <!-- ==================================================================== -->
+    <!-- Import the tests/*.xml files                                           -->
+    <!-- ==================================================================== -->
+    <import file="system.xml"/>
+    <import file="performance.xml"/>
+
+    <!-- ==================================================================== -->
+    <!-- Ensures that the dist package has been installed                     -->
+    <!-- ==================================================================== -->
+    <target name="ensure-dist-installed" depends="test-dist-installed" unless="appserver.dist.installed">
+        <!-- enforce the installation -->
+        <antcall target="install-appserver-dist" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Ensures that the runtime package has been installed                  -->
+    <!-- ==================================================================== -->
+    <target name="ensure-runtime-installed" depends="test-runtime-installed" unless="appserver.runtime.installed">
+        <!-- enforce the installation -->
+        <antcall target="install-appserver-runtime" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will start a vagrant box specifically suited for test tasks          -->
+    <!-- ==================================================================== -->
+    <target name="start-vagrant-test-box">
+        <!-- map the vagrant name according to our prepared environment -->
+        <property name="vagrant-box.name" value="${vagrant-box.prefix}Test" />
+        <!-- prepare the testing environment -->
+        <antcall target="prepare-test-environment" />
+        <!-- start our vagrant box -->
+        <antcall target="start-vagrant-box" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the dist package has been installed                         -->
+    <!-- ==================================================================== -->
+    <target name="test-dist-installed">
+        <available file="${appserver-base.dir}/server.php" property="appserver.dist.installed"/>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will prepare the environment to run a testing vagrant box in         -->
+    <!-- ==================================================================== -->
+    <target name="prepare-test-environment" depends="prepare, clean-reports">
+        <copy todir="${temp.dir}" failonerror="true">
+            <fileset dir="${basedir}">
+                <include name="build.*"/>
+                <include name="tests/*"/>
+            </fileset>
+        </copy>
+        <copy todir="${temp.dir}" failonerror="true">
+            <fileset dir="${basedir}">
+                <include name="Vagrantfile"/>
+            </fileset>
+            <filterchain>
+                <expandproperties/>
+            </filterchain>
+        </copy>
+        <!-- prepare a tmp dir for work within the VM -->
+        <mkdir dir="${temp.dir}/tmp" />
+    </target>
+    
+    <!-- ==================================================================== -->
+    <!-- Tests if the runtime package has been installed                      -->
+    <!-- ==================================================================== -->
+    <target name="test-runtime-installed">
+        <available file="${appserver-base.dir}/bin/php" property="appserver.runtime.installed"/>
+    </target>
+
+</project>

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!DOCTYPE project>
+<project name="appserver-io-dist/package-tests-performance" basedir=".." default="run-performance-tests">
+
+    <!-- ==================================================================== -->
+    <!-- Runs all available performance tests                                 -->
+    <!-- ==================================================================== -->
+    <target name="local-run-performance-tests" depends="ensure-runtime-installed, ensure-dist-installed">
+        <!-- test if the jmeter testplan runs through without errors -->
+        <antcall target="measure-jmeter-example-testplan" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Runs all available performance tests within a vagrant box we start   -->
+    <!-- and destroy automatically                                            -->
+    <!-- ==================================================================== -->
+    <target name="run-performance-tests">
+        <!-- start our vagrant box -->
+        <antcall target="start-vagrant-test-box" />
+        <!-- invoke original performance tests within vagrant box -->
+        <antcall target="vagrant-run-performance-tests" />
+        <!-- destroy the box after all work is done -->
+        <antcall target="destroy-vagrant-box" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the jmeter testplan configured against the example app      -->
+    <!-- does run without any errors                                          -->
+    <!-- ==================================================================== -->
+    <target name="measure-jmeter-example-testplan">
+        <!-- test if the testplan runs through -->
+        <exec executable="${jmeter.vagrant.basedir}/${jmeter.package.name}/bin/jmeter" failonerror="true">
+            <arg line="-n -t ${jmeter.example-test.path}/example-testplan.jmx -l ${vagrant-reports.dir}/performance-example-testplan.jtl"/>
+        </exec>
+    </target>
+
+</project>
