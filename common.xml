@@ -31,10 +31,6 @@
         <exec dir="${temp.dir}" executable="php">
             <arg value="composer-installer" />
         </exec>
-        <!-- also add the github oauth token to the local installation -->
-        <exec dir="${temp.dir}" executable="php">
-            <arg line="./composer.phar config -g github-oauth.github.com ${github.oauth.token}"/>
-        </exec>
     </target>
 
     <!-- ==================================================================== -->
@@ -131,46 +127,6 @@
     </target>
 
     <!-- ==================================================================== -->
-    <!-- Will check if a download of the appserver src is needed              -->
-    <!-- ==================================================================== -->
-    <target name="check-appserver-src-needed">
-        <!-- check if the appserver source is already present -->
-        <available file="${temp.dir}/appserver-src/.git" type="dir" property="appserver.src.unneeded"/>
-    </target>
-
-    <!-- ==================================================================== -->
-    <!-- Will download the appserver src unless it is not needed              -->
-    <!-- ==================================================================== -->
-    <target name="get-appserver-src" depends="check-appserver-src-needed" unless="appserver.src.unneeded">
-        <!-- clone appserver src -->
-        <exec dir="${temp.dir}" executable="git">
-            <arg line="clone https://${github.oauth.token}:x-oauth-basic@github.com/${appserver.src.repo} appserver-src" />
-        </exec>
-    </target>
-
-    <!-- ==================================================================== -->
-    <!-- Will provide the appserver.src.version property if not defined       -->
-    <!-- already                                                              -->
-    <!-- ==================================================================== -->
-    <target name="get-appserver-src-version" depends="get-appserver-src">
-        <!-- get lastest tag version -->
-        <exec dir="${temp.dir}/appserver-src" executable="git" outputProperty="appserver.src.version">
-            <arg line="describe --abbrev=0 --tags" />
-        </exec>
-    </target>
-
-    <!-- ==================================================================== -->
-    <!-- Will split the github tag into a semver version (e.g. 1.0.0) and a   -->
-    <!-- suffix (e.g. beta)                                                   -->
-    <!-- ==================================================================== -->
-    <target name="prepare-src-version-parts" depends="get-appserver-src-version">
-        <!-- filter the version string -->
-        <filter-version param="${appserver.src.version}" />
-        <property name="appserver.src.semver" value="${RESULT_VERSION}" />
-        <property name="appserver.src.suffix" value="${RESULT_BUILD-NUMBER}" />
-    </target>
-
-    <!-- ==================================================================== -->
     <!-- Will split a string at the "-" character                             -->
     <!-- ==================================================================== -->
     <scriptdef name="filter-version" language="javascript">
@@ -200,10 +156,8 @@
     <!-- Propagates the recent build to the official release sites, updates   -->
     <!-- release lists, etc.. Not to be mistaken for the "publish" target     -->
     <!-- ==================================================================== -->
-    <target name="release" description="Propagates the recent build to the official release sites, updates release lists, etc..">
-        <echo message="Now starting release cycle"/>
-        <!-- publish first -->
-        <antcall target="publish" />
+    <target name="version-release" description="Propagates the recent build to the official release sites, updates release lists, etc..">
+        <echo message="Now starting release cycle for the lately built version"/>
     </target>
 
     <!-- ==================================================================== -->
