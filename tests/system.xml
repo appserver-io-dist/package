@@ -146,7 +146,7 @@
             <arg value="version"/>
         </exec>
     </target>
-    
+
     <!-- ==================================================================== -->
     <!-- Tests if the jmeter testplan configured against the example app      -->
     <!-- does run without any errors                                          -->

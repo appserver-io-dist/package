@@ -153,8 +153,8 @@
     </scriptdef>
 
     <!-- ==================================================================== -->
-    <!-- Propagates the recent build to the official release sites, updates   -->
-    <!-- release lists, etc.. Not to be mistaken for the "publish" target     -->
+    <!-- Propagates the recently built version to more general plattforms     -->
+    <!-- like blog entries, external build targets, etc.                      -->
     <!-- ==================================================================== -->
     <target name="version-release" description="Propagates the recent build to the official release sites, updates release lists, etc..">
         <echo message="Now starting release cycle for the lately built version"/>
