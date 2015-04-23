@@ -18,10 +18,31 @@
     <property name="temp.dir" value="${basedir}/tmp" />
     <property name="reports.dir" value="${basedir}/reports" />
 
+    <!-- initialize the library specific properties -->
+    <property name="codepool" value="vendor"/>
+
     <!-- ==================================================================== -->
     <!-- Import the tests/*.xml files                                         -->
     <!-- ==================================================================== -->
     <import file="tests/test.xml"/>
+
+    <!-- ==================================================================== -->
+    <!-- Will check if a download of the appserver src is needed              -->
+    <!-- ==================================================================== -->
+    <target name="check-appserver-src-needed">
+        <!-- check if the appserver source is already present -->
+        <available file="${temp.dir}/appserver-src/.git" type="dir" property="appserver.src.unneeded"/>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will download the appserver src unless it is not needed              -->
+    <!-- ==================================================================== -->
+    <target name="get-appserver-src" depends="check-appserver-src-needed" unless="appserver.src.unneeded">
+        <!-- clone appserver src -->
+        <exec dir="${temp.dir}" executable="git">
+            <arg line="clone https://${github.oauth.token}:x-oauth-basic@github.com/${appserver.src.repo} appserver-src" />
+        </exec>
+    </target>
 
     <!-- ==================================================================== -->
     <!-- Installs composer in target directory                                -->
@@ -153,11 +174,57 @@
     </scriptdef>
 
     <!-- ==================================================================== -->
+    <!-- Prepares the appserver sources                                       -->
+    <!-- ==================================================================== -->
+    <target name="prepare-appserver-dist" depends="prepare, prepare-src-version-parts">
+        <!-- install local composer -->
+        <antcall target="install-composer" />
+        <!-- tell them what we do here -->
+        <echo message="Checkout latest tag version ${appserver.src.version}" />
+        <!-- checkout latest tag version -->
+        <exec dir="${temp.dir}/appserver-src" executable="git">
+            <arg line="checkout -q ${appserver.src.version}" />
+        </exec>
+        <!-- move to target.dir -->
+        <move todir="${target.dir}/src${appserver-base.dir}">
+            <fileset dir="${temp.dir}/appserver-src"/>
+        </move>
+        <!-- remove git db files -->
+        <delete dir="${target.dir}/src${appserver-base.dir}/.git" includeemptydirs="true" />
+        <!-- create the file with the version number -->
+        <echo file="${target.dir}/src${appserver-base.dir}/etc/appserver/.release-version" message="${appserver.src.semver}-${build.number}${appserver.src.suffix}" />
+        <!-- also add the github oauth token to the local installation -->
+        <exec dir="${target.dir}/src${appserver-base.dir}" executable="php">
+            <arg line="${temp.dir}/composer.phar config github-oauth.github.com ${github.oauth.token}"/>
+        </exec>
+        <!-- install dependencies via composer and let postinstall-scripts proceed -->
+        <echo message="Installing composer dependencies" />
+        <exec dir="${target.dir}/src${appserver-base.dir}" executable="php">
+            <arg line="${temp.dir}/composer.phar install --prefer-dist --no-dev --no-interaction --ignore-platform-reqs --optimize-autoloader"/>
+        </exec>
+        <!-- create deploy folder if not exists -->
+        <mkdir dir="${target.dir}/src/opt/appserver/deploy"/>
+        <!-- deploy example app by putting it into deploy folder of runtime -->
+        <get src="${appserver.apps.example.url}" dest="${target.dir}/src${appserver-base.dir}/deploy/example.phar" />
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Propagates the recently built version to more general plattforms     -->
     <!-- like blog entries, external build targets, etc.                      -->
     <!-- ==================================================================== -->
     <target name="version-release" description="Propagates the recent build to the official release sites, updates release lists, etc..">
         <echo message="Now starting release cycle for the lately built version"/>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Copies any built package to the snapshot hosting server.             -->
+    <!-- ==================================================================== -->
+    <target name="copy-to-hub" description="Uploads any built package to the file-server.">
+        <echo message="Now try to upload all builds to file-server"/>
+        <exec executable="sh" failonerror="true">
+            <arg value="-c" />
+            <arg value="scp -o StrictHostKeyChecking=no -i ${user.home}/.ssh/id_rsa ${build.dir}/* ${build.server.user}@${build.server.host}:${build.server.upload-path}" />
+        </exec>
     </target>
 
     <!-- ==================================================================== -->
@@ -168,12 +235,15 @@
             <fileset dir="${basedir}">
                <include name="build.*"/>
                <include name="tests/*"/>
+               <include name="${codepool}/**"/>
+               <exclude name="tests/provision.sh"/>
             </fileset>
         </copy>
         <!-- expand the properties within our box configuration -->
         <copy todir="${temp.dir}" failonerror="true">
             <fileset dir=".">
                 <include name="Vagrantfile"/>
+                <include name="provision.sh"/>
             </fileset>
             <filterchain>
                 <expandproperties/>
@@ -194,6 +264,30 @@
         <antcall target="vagrant-build" />
         <!-- destroy the box after all work is done -->
         <antcall target="destroy-vagrant-box" />   
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Creates all RPM packages within an existing vagrant box              -->
+    <!-- ==================================================================== -->
+    <target name="vagrant-build">
+        <!-- map the vagrant name according to the expected environment -->
+        <property name="vagrant-box.name" value="${vagrant-box.prefix}Build" />
+        <!-- invoke original build target within vagrant box -->
+        <exec dir="${temp.dir}" executable="sh" errorproperty="build.failed">
+            <arg value="-c" />
+            <arg value='vagrant ssh-config | ssh -F /dev/stdin ${vagrant-box.name} "sudo ant local-build -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.version=${target-os.version} -Dappserver.runtime.version=${appserver.runtime.version} -Dappserver.runtime.build=${appserver.runtime.build}"' />
+        </exec>
+        <!-- eliminate the possiblity of empty but existing error output -->
+        <property name="build.failed" value=""/>
+        <condition property="fatal-error.occured" value="${build.failed}">
+            <not>
+                <equals arg1="${build.failed}" arg2=""/>
+            </not>
+        </condition>
+        <!-- check for an explicit build failure and make an emergency destroy -->
+        <antcall target="destroy-vagrant-box-on-error" />
+        <!-- tell them about any failures we might encountered -->
+        <fail if="fatal-error.occured" message="The build failed with message '${fatal-error.occured}', see log above." />
     </target>
 
     <!-- ==================================================================== -->
