@@ -2,15 +2,18 @@
 <!DOCTYPE project>
 <project name="appserver-io-dist/package-tests" basedir=".." default="prepare-test-environment">
 
+    <!-- get the absolute path of this file for resource import -->
+    <dirname property="package-tests.basedir" file="${ant.file.appserver-io-dist/package-tests}"/>
+    
     <!-- Read in tests property files -->
-    <property file="${basedir}/tests/tests.properties"/>
-    <property file="${basedir}/tests/tests.default.properties"/>
+    <property file="${package-tests.basedir}/tests.properties"/>
+    <property file="${package-tests.basedir}/tests.default.properties"/>
 
     <!-- ==================================================================== -->
     <!-- Import the tests/*.xml files                                           -->
     <!-- ==================================================================== -->
-    <import file="system.xml"/>
-    <import file="performance.xml"/>
+    <import file="${package-tests.basedir}/system.xml"/>
+    <import file="${package-tests.basedir}/performance.xml"/>
 
     <!-- ==================================================================== -->
     <!-- Ensures that the dist package has been installed                     -->
@@ -55,7 +58,18 @@
             <fileset dir="${basedir}">
                 <include name="build.*"/>
                 <include name="tests/*"/>
+                <include name="${codepool}/**"/>
+                <exclude name="tests/provision.sh"/>
             </fileset>
+        </copy>
+        <!-- expand the properties within our box configuration -->
+        <copy todir="${temp.dir}" failonerror="true">
+            <fileset dir="${tests.dir}">
+                <include name="provision.sh"/>
+            </fileset>
+            <filterchain>
+                <expandproperties/>
+            </filterchain>
         </copy>
         <copy todir="${temp.dir}" failonerror="true">
             <fileset dir="${basedir}">
@@ -68,7 +82,7 @@
         <!-- prepare a tmp dir for work within the VM -->
         <mkdir dir="${temp.dir}/tmp" />
     </target>
-    
+
     <!-- ==================================================================== -->
     <!-- Tests if the runtime package has been installed                      -->
     <!-- ==================================================================== -->
