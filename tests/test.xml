@@ -55,7 +55,18 @@
             <fileset dir="${basedir}">
                 <include name="build.*"/>
                 <include name="tests/*"/>
+                <include name="${codepool}/**"/>
+                <exclude name="tests/provision.sh"/>
             </fileset>
+        </copy>
+        <!-- expand the properties within our box configuration -->
+        <copy todir="${temp.dir}" failonerror="true">
+            <fileset dir="${tests.dir}">
+                <include name="provision.sh"/>
+            </fileset>
+            <filterchain>
+                <expandproperties/>
+            </filterchain>
         </copy>
         <copy todir="${temp.dir}" failonerror="true">
             <fileset dir="${basedir}">
@@ -68,7 +79,7 @@
         <!-- prepare a tmp dir for work within the VM -->
         <mkdir dir="${temp.dir}/tmp" />
     </target>
-    
+
     <!-- ==================================================================== -->
     <!-- Tests if the runtime package has been installed                      -->
     <!-- ==================================================================== -->

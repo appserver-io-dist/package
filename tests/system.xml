@@ -44,6 +44,30 @@
     </target>
 
     <!-- ==================================================================== -->
+    <!-- Runs all available system tests within an expected vagrant box       -->
+    <!-- ==================================================================== -->
+    <target name="vagrant-run-system-tests">
+        <!-- map the vagrant name according to the expected environment -->
+        <property name="vagrant-box.name" value="${vagrant-box.prefix}Test" />
+        <!-- invoke original system tests within vagrant box -->
+        <exec dir="${temp.dir}" executable="sh" errorproperty="test.failed">
+            <arg value="-c" />
+            <arg value='vagrant ssh-config | ssh -F /dev/stdin ${vagrant-box.name} "sudo ant local-run-system-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.major.version=${target-os.major.version} -Dtarget-os.minor.version=${target-os.minor.version} -Dappserver.runtime.version=${appserver.runtime.version} -Dappserver.runtime.build=${appserver.runtime.build}"' />
+        </exec>
+        <!-- eliminate the possiblity of empty but existing error output -->
+        <property name="test.failed" value=""/>
+        <condition property="fatal-error.occured" value="${test.failed}">
+            <not>
+                <equals arg1="${test.failed}" arg2=""/>
+            </not>
+        </condition>
+        <!-- check for a specific build failure and make an emergency destroy -->
+        <antcall target="destroy-vagrant-box-on-error" />
+        <!-- tell them about any failures we might encountered -->
+        <fail if="fatal-error.occured" message="The system test failed with message '${fatal-error.occured}', see log above." />
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Tests if the runtime package can be installed correctly              -->
     <!-- ==================================================================== -->
     <target name="test-install-runtime">
