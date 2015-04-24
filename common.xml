@@ -100,6 +100,28 @@
     </target>
 
     <!-- ==================================================================== -->
+    <!-- Will provide the appserver.src.version property if not defined       -->
+    <!-- already                                                              -->
+    <!-- ==================================================================== -->
+    <target name="get-appserver-src-version" depends="get-appserver-src">
+        <!-- get lastest tag version -->
+        <exec dir="${temp.dir}/appserver-src" executable="git" outputProperty="appserver.src.version">
+            <arg line="describe --abbrev=0 --tags" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will split the github tag into a semver version (e.g. 1.0.0) and a   -->
+    <!-- suffix (e.g. beta)                                                   -->
+    <!-- ==================================================================== -->
+    <target name="prepare-src-version-parts" depends="get-appserver-src-version">
+        <!-- filter the version string -->
+        <filter-version param="${appserver.src.version}" />
+        <property name="appserver.src.semver" value="${RESULT_VERSION}" />
+        <property name="appserver.src.suffix" value="${RESULT_BUILD-NUMBER}" />
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Installs composer in target directory                                -->
     <!-- ==================================================================== -->
     <target name="install-composer">
