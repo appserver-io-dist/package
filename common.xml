@@ -125,7 +125,7 @@
     <!-- Installs composer in target directory                                -->
     <!-- ==================================================================== -->
     <target name="install-composer">
-        <get src="https://getcomposer.org/installer" dest="${temp.dir}/composer-installer" />
+        <get src="http://getcomposer.org/installer" dest="${temp.dir}/composer-installer" />
         <exec dir="${temp.dir}" executable="php">
             <arg value="composer-installer" />
         </exec>
