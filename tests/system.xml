@@ -26,8 +26,6 @@
         <antcall target="test-configtest-command" />
         <!-- test if the bundled binaries and executables are present and usable -->
         <antcall target="test-executable-exist" />
-        <!-- test if the jmeter testplan runs through without errors -->
-        <antcall target="test-jmeter-example-testplan" />
     </target>
 
     <!-- ==================================================================== -->
