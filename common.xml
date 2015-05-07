@@ -297,7 +297,7 @@
     <!-- Copies any built package to the snapshot hosting server.             -->
     <!-- ==================================================================== -->
     <target name="copy-to-hub" description="Uploads any built package to the file-server.">
-        <echo message="Now try to upload all builds to file-server"/>
+        <echo message="Now try to upload all builds to ${build.server.host}:${build.server.upload-path}"/>
         <exec executable="sh" failonerror="true">
             <arg value="-c" />
             <arg value="scp -o StrictHostKeyChecking=no -i ${user.home}/.ssh/id_rsa ${build.dir}/* ${build.server.user}@${build.server.host}:${build.server.upload-path}" />
