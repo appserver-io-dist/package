@@ -14,6 +14,7 @@
     <!-- ==================================================================== -->
     <import file="${package-tests.basedir}/system.xml"/>
     <import file="${package-tests.basedir}/performance.xml"/>
+    <import file="${package-tests.basedir}/integration.xml"/>
 
     <!-- ==================================================================== -->
     <!-- Ensures that the dist package has been installed                     -->
