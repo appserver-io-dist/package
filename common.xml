@@ -125,7 +125,7 @@
     <!-- Installs composer in target directory                                -->
     <!-- ==================================================================== -->
     <target name="install-composer">
-        <get src="https://getcomposer.org/installer" dest="${temp.dir}/composer-installer" />
+        <get src="http://getcomposer.org/installer" dest="${temp.dir}/composer-installer" />
         <exec dir="${temp.dir}" executable="php">
             <arg value="composer-installer" />
         </exec>
@@ -297,7 +297,34 @@
     <!-- Copies any built package to the snapshot hosting server.             -->
     <!-- ==================================================================== -->
     <target name="copy-to-hub" description="Uploads any built package to the file-server.">
-        <echo message="Now try to upload all builds to file-server"/>
+        <echo message="Now try to upload all builds to ${build.server.host}:${build.server.upload-path}"/>
+        <!-- determine if we are on a Windows machine, if so make it known -->
+        <condition property="os.is-windows">
+                <os family="windows" />
+        </condition>
+        <!-- execute the actual copy commands -->
+        <antcall target="windows-copy-to-hub" />
+        <antcall target="unix-copy-to-hub" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Copies any built package to the snapshot hosting server.             -->
+    <!-- This target is only usable on Windows machines.                      -->
+    <!-- ==================================================================== -->
+    <target name="windows-copy-to-hub" if="os.is-windows" description="Uploads any built package from a Windows machine to the file-server.">
+        <scp todir="${build.server.user}@${build.server.host}:${build.server.upload-path}" keyfile="${user.home}/.ssh/id_rsa" >
+            <fileset dir="${build.dir}" >
+                <include name="*.${build.name.ext}"/>
+                <include name="*.${extractor.name.ext}"/>
+            </fileset>
+        </scp>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Copies any built package to the snapshot hosting server.             -->
+    <!-- This target is only usable on an Unix like machines.                 -->
+    <!-- ==================================================================== -->
+    <target name="unix-copy-to-hub" unless="os.is-windows" description="Uploads any built package from a Unix like machine to the file-server.">
         <exec executable="sh" failonerror="true">
             <arg value="-c" />
             <arg value="scp -o StrictHostKeyChecking=no -i ${user.home}/.ssh/id_rsa ${build.dir}/* ${build.server.user}@${build.server.host}:${build.server.upload-path}" />
@@ -352,7 +379,7 @@
         <!-- invoke original build target within vagrant box -->
         <exec dir="${temp.dir}" executable="sh" errorproperty="build.failed">
             <arg value="-c" />
-            <arg value='vagrant ssh-config | ssh -F /dev/stdin ${vagrant-box.name} "sudo ant local-build -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.major.version=${target-os.major.version} -Dtarget-os.minor.version=${target-os.minor.version} -Dappserver.runtime.version=${appserver.runtime.version} -Dappserver.runtime.build=${appserver.runtime.build}"' />
+            <arg value="vagrant ssh-config | ssh -F /dev/stdin ${vagrant-box.name} 'sudo ant local-build -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.major.version=${target-os.major.version} -Dtarget-os.minor.version=${target-os.minor.version} -Dappserver.runtime.version=${appserver.runtime.version} -Dappserver.runtime.build=${appserver.runtime.build} -Dappserver.src.version=${appserver.src.version}'" />
         </exec>
         <!-- eliminate the possiblity of empty but existing error output -->
         <property name="build.failed" value=""/>
