@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<!DOCTYPE project>
+<project name="appserver-io-dist/package-tests-integration" basedir=".." default="run-integration-tests">
+
+    <!-- ==================================================================== -->
+    <!-- Tests if the behat.phar can be found in any of the expected paths    -->
+    <!-- ==================================================================== -->
+    <target name="test-behat-present">
+        <!-- determine if, and in which path the behat.phat file is present -->
+        <available file="${behat.default-bin.dir}/behat.phar" property="behat.bin.dir" value="${behat.default-bin.dir}" />
+        <available file="${behat.alternative-bin.dir}/behat.phar" property="behat.bin.dir" value="${behat.alternative-bin.dir}" />
+        <!-- if found we have to make it known -->
+        <condition property="behat-phar.present">
+            <isset property="behat.bin.dir"/>
+        </condition>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Ensures that the behat.phar file is present at our "bin" directory   -->
+    <!-- ==================================================================== -->
+    <target name="ensure-behat-present" depends="test-behat-present" unless="behat-phar.present">
+        <!-- download the behat phar -->
+        <property name="behat.bin.dir" value="${behat.default-bin.dir}" />
+        <get src="${behat.download.url}" dest="${behat.bin.dir}" quiet="true" usetimestamp="true" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Runs all available integration tests using behat                     -->
+    <!-- ==================================================================== -->
+    <target name="local-run-integration-tests" depends="ensure-behat-present, ensure-dist-installed, prepare-reports">
+        <!-- invoke original integration tests within vagrant box -->
+        <exec dir="${package.basedir}/tests/integration" executable="${appserver-base.dir}/bin/php" failonerror="true">
+            <arg line="${behat.bin.dir}/behat.phar --format=progress" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Runs all available integration tests within a vagrant box we start   -->
+    <!-- and destroy automatically                                            -->
+    <!-- ==================================================================== -->
+    <target name="run-integration-tests">
+        <!-- start our vagrant box -->
+        <antcall target="start-vagrant-test-box" />
+        <!-- invoke original performance tests within vagrant box -->
+        <antcall target="vagrant-run-integration-tests" />
+        <!-- destroy the box after all work is done -->
+        <antcall target="destroy-vagrant-box" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Runs all available performance tests within an expected vagrant VM   -->
+    <!-- ==================================================================== -->
+    <target name="vagrant-run-integration-tests">
+        <!-- map the vagrant name according to the expected environment -->
+        <property name="vagrant-box.name" value="${vagrant-box.prefix}Test" />
+        <!-- invoke original integration tests within vagrant box -->
+        <exec dir="${temp.dir}" executable="sh" errorproperty="test.failed">
+            <arg value="-c" />
+            <arg value='vagrant ssh-config | ssh -F /dev/stdin ${vagrant-box.name} "sudo ant local-run-integration-tests -buildfile ${vagrant.basedir}/build.xml -Dgithub.oauth.token=${github.oauth.token} -Dbuild.number=${build.number} -Dtarget-os.major.version=${target-os.major.version} -Dtarget-os.minor.version=${target-os.minor.version} -Dappserver.runtime.version=${appserver.runtime.version} -Dappserver.runtime.build=${appserver.runtime.build}"' />
+        </exec>
+        <!-- eliminate the possiblity of empty but existing error output -->
+        <property name="test.failed" value=""/>
+        <condition property="fatal-error.occured" value="${test.failed}">
+            <not>
+                <equals arg1="${test.failed}" arg2=""/>
+            </not>
+        </condition>
+        <!-- check for a specific build failure and make an emergency destroy -->
+        <antcall target="destroy-vagrant-box-on-error" />
+        <!-- tell them about any failures we might encountered -->
+        <fail if="fatal-error.occured" message="The integration test failed with message '${fatal-error.occured}', see log above." />
+    </target>
+
+</project>

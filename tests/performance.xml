@@ -5,7 +5,7 @@
     <!-- ==================================================================== -->
     <!-- Runs all available performance tests                                 -->
     <!-- ==================================================================== -->
-    <target name="local-run-performance-tests" depends="ensure-runtime-installed, ensure-dist-installed">
+    <target name="local-run-performance-tests" depends="ensure-dist-installed, prepare-reports">
         <!-- test if the jmeter testplan runs through without errors -->
         <antcall target="measure-jmeter-example-testplan" />
     </target>
