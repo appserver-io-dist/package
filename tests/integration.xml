@@ -3,11 +3,35 @@
 <project name="appserver-io-dist/package-tests-integration" basedir=".." default="run-integration-tests">
 
     <!-- ==================================================================== -->
+    <!-- Tests if the behat.phar can be found in any of the expected paths    -->
+    <!-- ==================================================================== -->
+    <target name="test-behat-present">
+        <!-- determine if, and in which path the behat.phat file is present -->
+        <available file="${behat.default-bin.dir}/behat.phar" property="behat.bin.dir" value="${behat.default-bin.dir}" />
+        <available file="${behat.alternative-bin.dir}/behat.phar" property="behat.bin.dir" value="${behat.alternative-bin.dir}" />
+        <!-- if found we have to make it known -->
+        <condition property="behat-phar.present">
+            <isset property="behat.bin.dir"/>
+        </condition>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Ensures that the behat.phar file is present at our "bin" directory   -->
+    <!-- ==================================================================== -->
+    <target name="ensure-behat-present" depends="test-behat-present" unless="behat-phar.present">
+        <!-- download the behat phar -->
+        <property name="behat.bin.dir" value="${behat.default-bin.dir}" />
+        <get src="${behat.download.url}" dest="${behat.bin.dir}" quiet="true" usetimestamp="true" />
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Runs all available integration tests using behat                     -->
     <!-- ==================================================================== -->
-    <target name="local-run-integration-tests">
+    <target name="local-run-integration-tests" depends="ensure-behat-present, ensure-dist-installed, prepare-reports">
         <!-- invoke original integration tests within vagrant box -->
-        <exec dir="${tests.dir}/integration" executable="behat" failonerror="true" />
+        <exec dir="${package.basedir}/tests/integration" executable="${appserver-base.dir}/bin/php" failonerror="true">
+            <arg line="${behat.bin.dir}/behat.phar --format=progress" />
+        </exec>
     </target>
 
     <!-- ==================================================================== -->

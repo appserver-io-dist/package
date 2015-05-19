@@ -400,6 +400,8 @@
     <target name="local-run-tests" depends="prepare">
         <!-- run the integration tests -->
         <antcall target="local-run-system-tests" />
+        <!-- run integration tests -->
+        <antcall target="local-run-integration-tests" />
         <!-- run performance tests -->
         <antcall target="local-run-performance-tests" />
     </target>

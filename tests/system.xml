@@ -5,7 +5,7 @@
     <!-- ==================================================================== -->
     <!-- Runs all available system tests locally                              -->
     <!-- ==================================================================== -->
-    <target name="local-run-system-tests">
+    <target name="local-run-system-tests" depends="prepare-reports">
         <!-- test runtime installation -->
         <antcall target="test-install-runtime" />
         <!-- test dist installation -->

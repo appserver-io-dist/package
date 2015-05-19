@@ -19,7 +19,7 @@
     <!-- ==================================================================== -->
     <!-- Ensures that the dist package has been installed                     -->
     <!-- ==================================================================== -->
-    <target name="ensure-dist-installed" depends="test-dist-installed" unless="appserver.dist.installed">
+    <target name="ensure-dist-installed" depends="test-dist-installed, ensure-runtime-installed" unless="appserver.dist.installed">
         <!-- enforce the installation -->
         <antcall target="install-appserver-dist" />
     </target>
