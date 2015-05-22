@@ -412,7 +412,7 @@
         <!-- run the system tests within the assumed box -->
         <antcall target="vagrant-run-system-tests" />
         <!-- run the performance tests within the assumed box -->
-        <antcall target="vagrant-run-performance-tests" />
+        <antcall target="vagrant-run-integration-tests" />
     </target>
 
     <!-- ==================================================================== -->
