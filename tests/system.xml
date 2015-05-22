@@ -89,8 +89,8 @@
         <echo message="Test if app 'example' has been deployed and flagged correctly." />
         <available file="${appserver-base.dir}/webapps/example/WEB-INF/web.xml" property="example_app.present"/>
         <fail unless="example_app.present" message="Example app seems to not have been deployed correctly."/>
-        <available file="${appserver-base.dir}/webapps/example/components/require.js" property="example_app.present"/>
-        <fail unless="example_app.present" message="Example app misses installed components."/>
+        <available file="${appserver-base.dir}/webapps/example/components/require.js" property="example_app.components.present"/>
+        <fail unless="example_app.components.present" message="Example app misses installed components."/>
         <!-- also test for the deploy flags -->
         <available file="${appserver-base.dir}/deploy/example.phar.deployed" property="example_deploy_flag.present"/>
         <fail unless="example_deploy_flag.present" message="Example app deployed but incorrect deploy flag."/>
