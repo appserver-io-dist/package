@@ -15,10 +15,8 @@ Being a wrapper which should also be usage "un-wrapped" this package offers diff
 | Prefix     | Implication                                                                                                   |
 | -----------| --------------------------------------------------------------------------------------------------------------|
 | `local-`   | Any ant call prefixed with `local-`, e.g. `local-build`, will be locally executed without the use of vagrant. |
-| `vagrant-` | The `vagrant-` prefix will trigger the remote execution within a vagrant box which is considered currently running in a specific `tmp` directory.
-    Internally uses the `local-` prefix to make the actual call within the box. |
-| none       | The ant call will be executed in a new vagrant box which will get started first, the call will be remotely made within the box and the box will be destroyed after the call returned.
-    Internally uses the `vagrant-` prefix to make the remote call.   |
+| `vagrant-` | The `vagrant-` prefix will trigger the remote execution within a vagrant box which is considered currently running in a specific `tmp` directory. Internally uses the `local-` prefix to make the actual call within the box. |
+| none       | The ant call will be executed in a new vagrant box which will get started first, the call will be remotely made within the box and the box will be destroyed after the call returned. Internally uses the `vagrant-` prefix to make the remote call.   |
 
 Targets which can be used together with the mentioned prefixes are:
 
