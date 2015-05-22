@@ -21,7 +21,7 @@
     <target name="ensure-behat-present" depends="test-behat-present" unless="behat-phar.present">
         <!-- download the behat phar -->
         <property name="behat.bin.dir" value="${behat.default-bin.dir}" />
-        <get src="${behat.download.url}" dest="${behat.bin.dir}" quiet="true" usetimestamp="true" />
+        <get src="${behat.download.url}" dest="${behat.bin.dir}" usetimestamp="true" />
     </target>
 
     <!-- ==================================================================== -->
