@@ -294,6 +294,16 @@
     </target>
 
     <!-- ==================================================================== -->
+    <!-- Publishes the recent build to any snapshot hubs, etc.. Not to be     -->
+    <!-- mistaken for the "release" target                                    -->
+    <!-- ==================================================================== -->
+    <target name="publish" description="Publishes the recent build to any snapshot hubs, etc..">
+        <echo message="Now starting publish cycle"/>
+        <!-- upload the build artifacts to the snapshot hub -->
+        <antcall target="copy-to-hub" />
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Copies any built package to the snapshot hosting server.             -->
     <!-- ==================================================================== -->
     <target name="copy-to-hub" description="Uploads any built package to the file-server.">
