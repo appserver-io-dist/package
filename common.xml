@@ -337,7 +337,7 @@
     <target name="unix-copy-to-hub" unless="os.is-windows" description="Uploads any built package from a Unix like machine to the file-server.">
         <exec executable="sh" failonerror="true">
             <arg value="-c" />
-            <arg value="scp -o StrictHostKeyChecking=no -i ${user.home}/.ssh/id_rsa ${build.dir}/* ${build.server.user}@${build.server.host}:${build.server.upload-path}/${target-os.major.version}" />
+            <arg value="scp -o StrictHostKeyChecking=no -i ${user.home}/.ssh/id_rsa ${build.dir}/* ${build.server.user}@${build.server.host}:${build.server.upload-path}" />
         </exec>
     </target>
 
