@@ -197,7 +197,6 @@
     <!-- Will start a vagrant box specifically suited for build tasks         -->
     <!-- ==================================================================== -->
     <target name="start-vagrant-build-box">
-        <echo message="${env.BUILD_ID}" />
         <!-- map the vagrant name according to our prepared environment -->
         <property name="vagrant-box.name" value="${vagrant-box.prefix}Build" />
         <!-- prepare the building environment -->
