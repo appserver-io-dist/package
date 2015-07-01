@@ -18,10 +18,36 @@
     <!-- ==================================================================== -->
     <!-- Ensures that the behat.phar file is present at our "bin" directory   -->
     <!-- ==================================================================== -->
-    <target name="ensure-behat-present" depends="test-behat-present" unless="behat-phar.present">
-        <!-- download the behat phar -->
+    <target name="ensure-behat-present" depends="test-behat-present" unless="behat-phar.present" description="Uploads any built package to the file-server.">
+        <!-- determine if we are on a Windows machine, if so make it known -->
+        <condition property="os.is-windows">
+                <os family="windows" />
+        </condition>
+        <!-- execute the actual download commands -->
         <property name="behat.bin.dir" value="${behat.default-bin.dir}" />
+        <antcall target="windows-ensure-behat-present" />
+        <antcall target="unix-ensure-behat-present" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Ensures that the behat.phar file is present at our "bin" directory   -->
+    <!-- Does so using ANT as Windows does come with the right TLS certs      -->
+    <!-- ==================================================================== -->
+    <target name="windows-ensure-behat-present" if="os.is-windows" description="Downloads the Behat PHAR archive using ANTs Get task.">
+        <!-- download the behat phar -->
         <get src="${behat.download.url}" dest="${behat.bin.dir}" usetimestamp="true" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Ensures that the behat.phar file is present at our "bin" directory   -->
+    <!-- Does so using CURL as some open JVM implementations do not offer the -->
+    <!-- full range of TLS certificates                                       -->
+    <!-- ==================================================================== -->
+    <target name="unix-ensure-behat-present" unless="os.is-windows" description="Downloads the Behat PHAR archive using CURL.">
+        <!-- download the behat phar -->
+        <exec dir="${behat.bin.dir}" executable="curl" failonerror="true">
+            <arg line="-OL ${behat.download.url}" />
+        </exec>
     </target>
 
     <!-- ==================================================================== -->
