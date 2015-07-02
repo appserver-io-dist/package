@@ -3,6 +3,16 @@
 <project name="appserver-io-dist/package-tests-integration" basedir=".." default="run-integration-tests">
 
     <!-- ==================================================================== -->
+    <!-- Runs all available integration tests using behat                     -->
+    <!-- ==================================================================== -->
+    <target name="local-run-integration-tests" depends="ensure-behat-present, ensure-dist-installed, prepare-reports">
+        <!-- invoke original integration tests within vagrant box -->
+        <exec dir="${package.basedir}/tests/integration" executable="${appserver-base.dir}/bin/php" failonerror="true">
+            <arg line="${behat.bin.dir}/behat.phar --format=progress" />
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Tests if the behat.phar can be found in any of the expected paths    -->
     <!-- ==================================================================== -->
     <target name="test-behat-present">
@@ -47,16 +57,6 @@
         <!-- download the behat phar -->
         <exec dir="${behat.bin.dir}" executable="curl" failonerror="true">
             <arg line="-OL ${behat.download.url}" />
-        </exec>
-    </target>
-
-    <!-- ==================================================================== -->
-    <!-- Runs all available integration tests using behat                     -->
-    <!-- ==================================================================== -->
-    <target name="local-run-integration-tests" depends="ensure-behat-present, ensure-dist-installed, prepare-reports">
-        <!-- invoke original integration tests within vagrant box -->
-        <exec dir="${package.basedir}/tests/integration" executable="${appserver-base.dir}/bin/php" failonerror="true">
-            <arg line="${behat.bin.dir}/behat.phar --format=progress" />
         </exec>
     </target>
 

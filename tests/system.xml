@@ -10,6 +10,10 @@
         <antcall target="test-install-runtime" />
         <!-- test dist installation -->
         <antcall target="test-install-dist" />
+        <!-- delay further tests a little to allow the daemons to do their initial background work -->
+        <antcall target="delay-further-tests">
+            <param name="test.delay.interval" value="10"/>
+        </antcall>
         <!-- test if the services are running -->
         <antcall target="test-services-running" />
         <!-- test if there have been errors during startup -->
