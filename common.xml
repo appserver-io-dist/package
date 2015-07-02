@@ -118,7 +118,7 @@
         <!-- filter the version string -->
         <filter-version param="${appserver.src.version}" />
         <property name="appserver.src.semver" value="${RESULT_VERSION}" />
-        <property name="appserver.src.suffix" value="${RESULT_BUILD-NUMBER}" />
+        <property name="appserver.src.suffix" value=".${RESULT_BUILD-NUMBER}" />
     </target>
 
     <!-- ==================================================================== -->
