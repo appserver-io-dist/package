@@ -4,7 +4,7 @@
 
     <!-- get the absolute path of this file for resource import -->
     <dirname property="package-tests.basedir" file="${ant.file.appserver-io-dist/package-tests}"/>
-    
+
     <!-- Read in tests property files -->
     <property file="${package-tests.basedir}/tests.properties"/>
     <property file="${package-tests.basedir}/tests.default.properties"/>
@@ -42,6 +42,15 @@
         <antcall target="prepare-test-environment" />
         <!-- start our vagrant box -->
         <antcall target="start-vagrant-box" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Will sleep a certain time to delay further tests.                    -->
+    <!-- This can be used to allow daemons to do their background work first  -->
+    <!-- ==================================================================== -->
+    <target name="delay-further-tests">
+        <echo message="Delaying further tests for ${test.delay.interval} seconds ..." />
+        <sleep seconds="${test.delay.interval}"/>
     </target>
 
     <!-- ==================================================================== -->
