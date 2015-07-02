@@ -241,7 +241,7 @@
         if (param.indexOf("-") !== -1) {
 
            resultVersion = param.substring(0, param.indexOf("-"));
-           resultBuildNumber = param.replace(resultVersion + "-", ".");
+           resultBuildNumber = param.replace(resultVersion + "-", "");
         }
 
         // store the result in new properties
