@@ -30,6 +30,8 @@
         <antcall target="test-configtest-command" />
         <!-- test if the bundled binaries and executables are present and usable -->
         <antcall target="test-executable-exist" />
+        <!-- run jmeter against the example app and test for errors -->
+        <antcall target="test-jmeter-example-testplan" />
     </target>
 
     <!-- ==================================================================== -->
@@ -182,7 +184,7 @@
     <target name="test-jmeter-example-testplan">
         <!-- test if the testplan runs through -->
         <exec executable="${jmeter.vagrant.basedir}/${jmeter.package.name}/bin/jmeter" failonerror="true" outputproperty="jmeter.example-test.output">
-            <arg line="-n -t ${jmeter.example-test.path}/example-testplan.jmx -l ${vagrant-reports.dir}/system-example-testplan.jtl -Jon_error=stoptestnow -Jloop_count=${jmeter.example.loop-count}"/>
+            <arg line="-n -t ${jmeter.example-test.path}/example-testplan.jmx -l ${vagrant-reports.dir}/system-example-testplan.jtl -Jon_error=stoptestnow -Jconcurrent_users=3 -Jloop_count=${jmeter.example.loop-count}"/>
         </exec>
         <echo message="${jmeter.example-test.output}" />
         <!-- parse the produced output and fail if it isn't what we expect -->
