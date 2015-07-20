@@ -31,7 +31,7 @@
         <!-- test if the bundled binaries and executables are present and usable -->
         <antcall target="test-executable-exist" />
         <!-- run jmeter against the example app and test for errors -->
-        <antcall target="test-jmeter-example-testplan" />
+        <!-- <antcall target="test-jmeter-example-testplan" /> -->
     </target>
 
     <!-- ==================================================================== -->
