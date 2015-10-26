@@ -367,6 +367,7 @@
             <fileset dir="${build.dir}" >
                 <include name="*.${build.name.ext}"/>
                 <include name="*.${extractor.name.ext}"/>
+                <include name="*.${os.package-extension}"/>
             </fileset>
         </scp>
     </target>
