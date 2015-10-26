@@ -7,3 +7,5 @@
 /target
 /instance-src
 build.properties
+/vendor
+/composer.lock

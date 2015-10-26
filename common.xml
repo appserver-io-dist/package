@@ -16,7 +16,7 @@
     <!-- Read in tests property files -->
     <property file="${package.basedir}/common.properties"/>
     <property file="${package.basedir}/common.default.properties"/>
-    
+
     <!-- Set directory properties -->
     <property name="src.dir" value="${basedir}/src" />
     <property name="target.dir" value="${basedir}/target" />
@@ -124,6 +124,41 @@
             </not>
         </condition>
         <property name="appserver.src.suffix" value="${RESULT_BUILD-NUMBER}" />
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Checks if composer has installed it's dependencies                   -->
+    <!-- ==================================================================== -->
+    <target name="is-composer-installed">
+        <condition property="composer.present">
+            <available file="${build.dir}" type="dir"/>
+        </condition>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Installs all dependencies defined in composer.json                   -->
+    <!-- ==================================================================== -->
+    <target name="composer-install" depends="is-composer-installed" unless="composer.present" description="Installs all dependencies defined in composer.json">
+        <exec dir="${basedir}" executable="composer">
+            <arg line="--no-interaction --dev install"/>
+        </exec>
+    </target>
+
+    <!-- ==================================================================== -->
+    <!-- Updates composer dependencies defined in composer.json               -->
+    <!-- ==================================================================== -->
+    <target name="composer-update" depends="is-composer-installed" if="composer.present" description="Updates composer dependencies defined in composer.json">
+        <exec dir="${basedir}" executable="composer">
+            <arg line="--no-interaction --dev update"/>
+        </exec>
+    </target>
+
+    <!-- ===================================================================== -->
+    <!-- Checks if the build- and deployment stub has already been initialized -->
+    <!-- ===================================================================== -->
+    <target name="composer-init">
+        <antcall target="composer-install"/>
+        <antcall target="composer-update"/>
     </target>
 
     <!-- ==================================================================== -->
@@ -327,7 +362,8 @@
     <!-- This target is only usable on Windows machines.                      -->
     <!-- ==================================================================== -->
     <target name="windows-copy-to-hub" if="os.is-windows" description="Uploads any built package from a Windows machine to the file-server.">
-        <scp todir="${build.server.user}@${build.server.host}:${build.server.upload-path}" keyfile="${user.home}/.ssh/id_rsa" >
+        <echo message="Using Windows style upload process"/>
+        <scp todir="${build.server.user}@${build.server.host}:${build.server.upload-path}" keyfile="${user.home}/.ssh/id_rsa" failonerror="true">
             <fileset dir="${build.dir}" >
                 <include name="*.${build.name.ext}"/>
                 <include name="*.${extractor.name.ext}"/>
@@ -340,6 +376,7 @@
     <!-- This target is only usable on an Unix like machines.                 -->
     <!-- ==================================================================== -->
     <target name="unix-copy-to-hub" unless="os.is-windows" description="Uploads any built package from a Unix like machine to the file-server.">
+        <echo message="Using Unix style upload process"/>
         <exec executable="sh" failonerror="true">
             <arg value="-c" />
             <arg value="scp -o StrictHostKeyChecking=no -i ${user.home}/.ssh/id_rsa ${build.dir}/* ${build.server.user}@${build.server.host}:${build.server.upload-path}" />
@@ -382,7 +419,7 @@
         <!-- start the build in the box -->
         <antcall target="vagrant-build" />
         <!-- destroy the box after all work is done -->
-        <antcall target="destroy-vagrant-box" />   
+        <antcall target="destroy-vagrant-box" />
     </target>
 
     <!-- ==================================================================== -->
