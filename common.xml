@@ -363,7 +363,7 @@
     <!-- ==================================================================== -->
     <target name="windows-copy-to-hub" if="os.is-windows" description="Uploads any built package from a Windows machine to the file-server.">
         <echo message="Using Windows style upload process"/>
-        <scp todir="${build.server.user}@${build.server.host}:${build.server.upload-path}" keyfile="${user.home}/.ssh/id_rsa" failonerror="true">
+        <scp todir="${build.server.user}@${build.server.host}:${build.server.upload-path}" trust="true" keyfile="${user.home}/.ssh/id_rsa" failonerror="true">
             <fileset dir="${build.dir}" >
                 <include name="*.${build.name.ext}"/>
                 <include name="*.${extractor.name.ext}"/>
