@@ -321,7 +321,8 @@
         </exec>
         <!-- create deploy folder if not exists -->
         <mkdir dir="${target.dir}/src/opt/appserver/deploy"/>
-        <!-- deploy example app by putting it into deploy folder of runtime -->
+        <!-- deploy api/example app by putting it into deploy folder of runtime -->
+        <get src="${appserver.apps.api.url}" dest="${target.dir}/src${appserver-base.dir}/var/deploy/api.phar" />
         <get src="${appserver.apps.example.url}" dest="${target.dir}/src${appserver-base.dir}/deploy/example.phar" />
     </target>
 
