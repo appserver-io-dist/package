@@ -95,7 +95,7 @@
     <target name="get-appserver-src" depends="check-appserver-src-needed" unless="appserver.src.unneeded">
         <!-- clone appserver src -->
         <exec dir="${temp.dir}" executable="git">
-            <arg line="clone https://${github.oauth.token}:x-oauth-basic@github.com/${appserver.src.repo} appserver-src" />
+            <arg line="clone https://github.com/${appserver.src.repo} appserver-src" />
         </exec>
     </target>
 
@@ -310,10 +310,6 @@
         <delete dir="${target.dir}/src${appserver-base.dir}/.git" includeemptydirs="true" />
         <!-- create the file with the version number -->
         <echo file="${target.dir}/src${appserver-base.dir}/etc/appserver/.release-version" message="${appserver.src.semver}-${build.number}${appserver.src.suffix}" />
-        <!-- also add the github oauth token to the local installation -->
-        <exec dir="${target.dir}/src${appserver-base.dir}" executable="php">
-            <arg line="${temp.dir}/composer.phar config github-oauth.github.com ${github.oauth.token}"/>
-        </exec>
         <!-- install dependencies via composer and let postinstall-scripts proceed -->
         <echo message="Installing composer dependencies" />
         <exec dir="${target.dir}/src${appserver-base.dir}" executable="php">
