@@ -82,6 +82,13 @@
     </target>
 
     <!-- ==================================================================== -->
+    <!-- Prepares the temp environment                                       -->
+    <!-- ==================================================================== -->
+    <target name="prepare-temp">
+        <mkdir dir="${temp.dir}" />
+    </target>
+
+    <!-- ==================================================================== -->
     <!-- Will check if a download of the appserver src is needed              -->
     <!-- ==================================================================== -->
     <target name="check-appserver-src-needed">
@@ -92,7 +99,7 @@
     <!-- ==================================================================== -->
     <!-- Will download the appserver src unless it is not needed              -->
     <!-- ==================================================================== -->
-    <target name="get-appserver-src" depends="check-appserver-src-needed" unless="appserver.src.unneeded">
+    <target name="get-appserver-src" depends="prepare-temp, check-appserver-src-needed" unless="appserver.src.unneeded">
         <!-- clone appserver src -->
         <exec dir="${temp.dir}" executable="git">
             <arg line="clone https://github.com/${appserver.src.repo} appserver-src" />
